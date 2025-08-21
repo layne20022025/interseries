@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interclasse - Chaveamento Futsal e Vôlei</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Cabeçalho do site -->
+  <header class="app-header">
+    <h1>Interclasse Escolar</h1>
+    <p>Cadastro de equipes e chaveamento eliminatório (Futsal e Vôlei)</p>
+  </header>
+
+  <main class="container">
+    <!-- Seção de cadastro de equipes -->
+    <section class="section card" aria-labelledby="cadastro-titulo">
+      <div class="section-header">
+        <h2 id="cadastro-titulo">Cadastro de Equipes</h2>
+      </div>
+      <form id="team-form" class="team-form" autocomplete="off">
+        <!-- Seleção de modalidade controla o estado do formulário -->
+        <div class="form-row">
+          <label for="modality-select">Modalidade</label>
+          <select id="modality-select" name="modality">
+            <option value="futsal">Futsal</option>
+            <option value="volei">Vôlei</option>
+          </select>
+        </div>
+        <!-- Campo de nome da turma/time -->
+        <div class="form-row">
+          <label for="team-name">Nome da turma/time</label>
+          <input id="team-name" name="team" type="text" maxlength="40" placeholder="Ex.: 1ºA, 2ºB, 3ºC..." required>
+        </div>
+        <div class="form-actions">
+          <button type="submit" id="add-team-btn" class="btn primary">Adicionar equipe</button>
+          <button type="button" id="generate-bracket-btn" class="btn success">Gerar chaveamento</button>
+          <button type="button" id="reset-tournament-btn" class="btn danger" title="Limpa chaveamento e desbloqueia a edição de equipes desta modalidade">Limpar torneio</button>
+        </div>
+        <p id="form-hint" class="hint">Dica: selecione a modalidade, digite a turma e clique em "Adicionar equipe".</p>
+        <p id="lock-warning" class="warning" hidden></p>
+      </form>
+
+      <!-- Lista dinâmica de equipes por modalidade selecionada -->
+      <div class="team-list-wrapper">
+        <div class="list-header">
+          <h3>Equipes cadastradas (<span id="team-count">0</span>)</h3>
+          <small>Máximo de 16 por modalidade</small>
+        </div>
+        <ul id="team-list" class="team-list" aria-live="polite"></ul>
+      </div>
+    </section>
+
+    <!-- Seção de chaveamento -->
+    <section class="section card" aria-labelledby="chaveamento-titulo">
+      <div class="section-header">
+        <h2 id="chaveamento-titulo">Chaveamento</h2>
+        <span id="current-modality-label" class="badge">Futsal</span>
+      </div>
+      <div id="bracket-container" class="bracket" aria-live="polite">
+        <!-- Renderizado dinamicamente pelo script -->
+      </div>
+      <div id="champion-banner" class="champion" hidden></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>Funciona 100% offline em qualquer navegador moderno. Sem frameworks.</small>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
