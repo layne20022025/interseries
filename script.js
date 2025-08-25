@@ -30,11 +30,8 @@ const championBannerEl = document.getElementById("champion-banner");
 const currentModalityBadge = document.getElementById("current-modality-label");
 const lockWarningEl = document.getElementById("lock-warning");
 const formEl = document.getElementById("team-form");
-// Novos elementos da toolbar/toasts
-const printBtn = document.getElementById("print-bracket-btn");
 const exportBtn = document.getElementById("export-data-btn");
-const importInput = document.getElementById("import-data-input");
-const toastContainer = document.getElementById("toast-container");
+const importInput = document.getElementById("import-file-input");
 
 // Utilitários
 function logInfo(message, payload) {
@@ -42,23 +39,6 @@ function logInfo(message, payload) {
 }
 function logError(message, payload) {
   console.error(`[ERRO] ${message}`, payload ?? "");
-}
-
-// Toasts não obstrutivos
-function showToast(text, type = "info") {
-  try {
-    const toast = document.createElement("div");
-    toast.className = `toast ${type}`;
-    toast.textContent = text;
-    toastContainer.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transition = "opacity 300ms ease";
-      setTimeout(() => toast.remove(), 320);
-    }, 2200);
-  } catch (err) {
-    console.warn("Falha ao exibir toast", err);
-  }
 }
 
 function sanitizeName(raw) {
@@ -72,7 +52,6 @@ function isLocked(modality) {
 function setLocked(modality, locked) {
   state.lockedByModality[modality] = locked;
   updateFormLockUI();
-  persistState();
 }
 
 function updateFormLockUI() {
@@ -98,37 +77,66 @@ function setModality(modality) {
   logInfo("Modalidade alterada", { modality });
 }
 
+// Persistência (localStorage)
+const STORAGE_KEY = "interclasse:v1";
+
+function persist() {
+  try {
+    const data = JSON.stringify(state);
+    localStorage.setItem(STORAGE_KEY, data);
+    logInfo("Estado salvo no localStorage");
+  } catch (err) {
+    logError("Falha ao salvar no localStorage", err);
+  }
+}
+
+function restore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    // Validação superficial
+    if (saved && saved.teamsByModality && saved.bracketByModality && saved.lockedByModality) {
+      state.modality = saved.modality ?? state.modality;
+      state.teamsByModality = saved.teamsByModality;
+      state.bracketByModality = saved.bracketByModality;
+      state.lockedByModality = saved.lockedByModality;
+      logInfo("Estado restaurado do localStorage");
+    }
+  } catch (err) {
+    logError("Falha ao restaurar do localStorage", err);
+  }
+}
+
 // Gestão de equipes
 function addTeam() {
   if (isLocked(state.modality)) {
     logError("Não é possível adicionar equipes com chaveamento bloqueado.");
-    showToast("Chaveamento gerado: não é possível adicionar equipes.", "error");
     return;
   }
   const name = sanitizeName(teamNameInput.value);
   if (!name) {
     logError("Nome da equipe inválido.");
-    showToast("Informe um nome válido para a equipe.", "error");
+    alert("Informe um nome válido para a equipe.");
     return;
   }
   const teams = state.teamsByModality[state.modality];
   if (teams.length >= MAX_TEAMS) {
     logError("Limite máximo de equipes atingido.");
-    showToast(`Máximo de ${MAX_TEAMS} equipes por modalidade.`, "error");
+    alert(`Máximo de ${MAX_TEAMS} equipes por modalidade.`);
     return;
   }
   const exists = teams.some(t => t.toLowerCase() === name.toLowerCase());
   if (exists) {
     logError("Equipe duplicada.");
-    showToast("Esta equipe já foi cadastrada nesta modalidade.", "error");
+    alert("Esta equipe já foi cadastrada nesta modalidade.");
     return;
   }
   teams.push(name);
   teamNameInput.value = "";
   renderTeams();
-  persistState();
-  showToast("Equipe adicionada", "success");
   logInfo("Equipe adicionada", { modality: state.modality, name });
+  persist();
 }
 
 function removeTeam(index) {
@@ -139,9 +147,8 @@ function removeTeam(index) {
   const teams = state.teamsByModality[state.modality];
   const removed = teams.splice(index, 1)[0];
   renderTeams();
-  persistState();
-  showToast("Equipe removida", "info");
   logInfo("Equipe removida", { modality: state.modality, name: removed });
+  persist();
 }
 
 function renderTeams() {
@@ -278,7 +285,7 @@ function generateBracket() {
   const teams = state.teamsByModality[modality];
   if (teams.length < 2) {
     logError("Número insuficiente de equipes para gerar chaveamento.");
-    showToast("Cadastre pelo menos 2 equipes para gerar o chaveamento.", "error");
+    alert("Cadastre pelo menos 2 equipes para gerar o chaveamento.");
     return;
   }
 
@@ -288,9 +295,8 @@ function generateBracket() {
   setLocked(modality, true);
   renderTeams();
   renderBracket();
-  persistState();
-  showToast("Chaveamento gerado!", "success");
   logInfo("Chaveamento gerado", { modality, teams: teams.length });
+  persist();
 }
 
 function onSaveScore(roundIndex, matchIndex, inputA, inputB) {
@@ -299,7 +305,7 @@ function onSaveScore(roundIndex, matchIndex, inputA, inputB) {
   const match = rounds[roundIndex][matchIndex];
   if (!match.teamA || !match.teamB) {
     logError("Partida sem duas equipes não aceita placar.");
-    showToast("Partida sem duas equipes.", "error");
+    alert("Esta partida ainda não possui duas equipes definidas.");
     return;
   }
 
@@ -308,12 +314,12 @@ function onSaveScore(roundIndex, matchIndex, inputA, inputB) {
   const isValid = Number.isInteger(valA) && Number.isInteger(valB) && valA >= 0 && valB >= 0;
   if (!isValid) {
     logError("Placar inválido.");
-    showToast("Informe placares inteiros >= 0.", "error");
+    alert("Informe placares válidos (números inteiros >= 0).");
     return;
   }
   if (valA === valB) {
     logError("Empate não permitido em eliminatória.");
-    showToast("Empate não permitido.", "error");
+    alert("Empate não permitido. Ajuste os placares para definir um vencedor.");
     return;
   }
 
@@ -340,15 +346,14 @@ function onSaveScore(roundIndex, matchIndex, inputA, inputB) {
   if (isFinal) {
     championBannerEl.hidden = false;
     championBannerEl.textContent = `Campeão (${state.modality === 'futsal' ? 'Futsal' : 'Vôlei'}): ${match.winner}`;
-    showToast(`Campeão: ${match.winner}`, "success");
   } else {
     championBannerEl.hidden = true;
     championBannerEl.textContent = "";
   }
 
   renderBracket();
-  persistState();
   logInfo("Placar salvo", { roundIndex, matchIndex, scoreA: valA, scoreB: valB, winner: match.winner });
+  persist();
 }
 
 function resetTournament() {
@@ -359,9 +364,8 @@ function resetTournament() {
   championBannerEl.textContent = "";
   renderTeams();
   renderBracket();
-  persistState();
-  showToast("Torneio limpo.", "info");
   logInfo("Torneio resetado", { modality });
+  persist();
 }
 
 // Renderização do chaveamento
@@ -473,32 +477,21 @@ resetTournamentBtn.addEventListener("click", () => {
 
 modalitySelect.addEventListener("change", (e) => setModality(e.target.value));
 
-// Toolbar: imprimir, exportar e importar
-if (printBtn) {
-  printBtn.addEventListener("click", () => {
-    window.print();
-    showToast("Abrindo impressão...", "info");
-  });
-}
-
+// Exportar/Importar
 if (exportBtn) {
   exportBtn.addEventListener("click", () => {
     try {
-      const data = exportData();
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      const dateStr = new Date().toISOString().slice(0,19).replace(/[:T]/g, "-");
-      a.download = `interclasse-${dateStr}.json`;
-      document.body.appendChild(a);
+      a.download = `interclasse-${new Date().toISOString().slice(0,19)}.json`;
       a.click();
       URL.revokeObjectURL(url);
-      a.remove();
-      showToast("Exportado com sucesso.", "success");
+      logInfo("Dados exportados com sucesso");
     } catch (err) {
-      logError("Falha ao exportar", err);
-      showToast("Erro ao exportar.", "error");
+      logError("Falha ao exportar dados", err);
+      alert("Falha ao exportar. Veja o console.");
     }
   });
 }
@@ -510,71 +503,35 @@ if (importInput) {
     try {
       const text = await file.text();
       const data = JSON.parse(text);
-      importData(data);
-      showToast("Importado com sucesso.", "success");
+      if (!data || !data.teamsByModality || !data.bracketByModality || !data.lockedByModality) {
+        throw new Error("Arquivo inválido");
+      }
+      state.modality = data.modality ?? state.modality;
+      state.teamsByModality = data.teamsByModality;
+      state.bracketByModality = data.bracketByModality;
+      state.lockedByModality = data.lockedByModality;
+      setModality(state.modality);
+      renderTeams();
+      renderBracket();
+      updateFormLockUI();
+      persist();
+      logInfo("Dados importados com sucesso");
+      alert("Dados importados com sucesso.");
     } catch (err) {
-      logError("Falha ao importar", err);
-      showToast("Arquivo inválido.", "error");
+      logError("Falha ao importar dados", err);
+      alert("Falha ao importar. Veja o console.");
     } finally {
-      e.target.value = ""; // permite reimportar o mesmo arquivo
+      importInput.value = "";
     }
   });
 }
 
-// Persistência em localStorage
-const LS_KEY = "interclasse_state_v1";
-function persistState() {
-  try {
-    const data = exportData();
-    localStorage.setItem(LS_KEY, JSON.stringify(data));
-  } catch (err) {
-    console.warn("Falha ao persistir state", err);
-  }
-}
-
-function exportData() {
-  return {
-    modality: state.modality,
-    teamsByModality: state.teamsByModality,
-    bracketByModality: state.bracketByModality,
-    lockedByModality: state.lockedByModality,
-    version: 1
-  };
-}
-
-function importData(data) {
-  if (!data || typeof data !== "object") throw new Error("Dados inválidos");
-  state.modality = MODALITIES.includes(data.modality) ? data.modality : "futsal";
-  state.teamsByModality = data.teamsByModality ?? { futsal: [], volei: [] };
-  state.bracketByModality = data.bracketByModality ?? { futsal: null, volei: null };
-  state.lockedByModality = data.lockedByModality ?? { futsal: false, volei: false };
-  setModality(state.modality);
+// Inicialização da UI
+(function init() {
+  restore();
+  setModality(state.modality || "futsal");
   renderTeams();
   renderBracket();
   updateFormLockUI();
-  persistState();
-}
-
-// Inicialização da UI
-(function init() {
-  try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (raw) {
-      const data = JSON.parse(raw);
-      importData(data);
-      logInfo("Estado restaurado do localStorage");
-    } else {
-      setModality("futsal");
-      renderTeams();
-      renderBracket();
-      updateFormLockUI();
-    }
-  } catch (err) {
-    console.warn("Falha ao restaurar state", err);
-    setModality("futsal");
-    renderTeams();
-    renderBracket();
-    updateFormLockUI();
-  }
   logInfo("Aplicação iniciada.");
 })();

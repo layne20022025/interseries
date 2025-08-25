@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interclasse Escolar: cadastro de equipes e chaveamento eliminatório (Futsal e Vôlei). Funciona offline.">
+  <meta name="theme-color" content="#0f172a">
   <title>Interclasse - Chaveamento Futsal e Vôlei</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
   <!-- Cabeçalho do site -->
@@ -18,6 +21,11 @@
     <section class="section card" aria-labelledby="cadastro-titulo">
       <div class="section-header">
         <h2 id="cadastro-titulo">Cadastro de Equipes</h2>
+        <div class="header-actions" role="group" aria-label="Ações de dados">
+          <button id="export-data-btn" class="btn" type="button" title="Exportar dados (JSON)">Exportar</button>
+          <label class="btn" for="import-file-input" title="Importar dados (JSON)">Importar</label>
+          <input id="import-file-input" type="file" accept="application/json" hidden>
+        </div>
       </div>
       <form id="team-form" class="team-form" autocomplete="off">
         <!-- Seleção de modalidade controla o estado do formulário -->
@@ -58,14 +66,6 @@
         <h2 id="chaveamento-titulo">Chaveamento</h2>
         <span id="current-modality-label" class="badge">Futsal</span>
       </div>
-      <!-- Barra de ferramentas: impressão, exportação e importação -->
-      <div class="toolbar" role="toolbar" aria-label="Ferramentas de chaveamento">
-        <button type="button" id="print-bracket-btn" class="btn">Imprimir</button>
-        <button type="button" id="export-data-btn" class="btn">Exportar</button>
-        <label class="btn" for="import-data-input" title="Importar dados">Importar
-          <input id="import-data-input" type="file" accept="application/json" class="sr-only" />
-        </label>
-      </div>
       <div id="bracket-container" class="bracket" aria-live="polite">
         <!-- Renderizado dinamicamente pelo script -->
       </div>
@@ -78,7 +78,5 @@
   </footer>
 
   <script src="script.js"></script>
-  <!-- Contêiner de toasts para feedback não obstrutivo -->
-  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 </body>
 </html>
