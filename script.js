@@ -32,6 +32,7 @@ const lockWarningEl = document.getElementById("lock-warning");
 const formEl = document.getElementById("team-form");
 const exportBtn = document.getElementById("export-data-btn");
 const importInput = document.getElementById("import-file-input");
+const currentUser = window.__CURRENT_USER__ || null; // vindo de index.html
 
 // Utilitários
 function logInfo(message, payload) {
@@ -61,8 +62,12 @@ function updateFormLockUI() {
   lockWarningEl.textContent = msg;
   lockWarningEl.hidden = !locked;
 
-  teamNameInput.disabled = locked;
-  addTeamBtn.disabled = locked;
+  // Espectador: bloqueia edição
+  const isSpectator = currentUser && currentUser.role === 'espectador';
+  teamNameInput.disabled = locked || isSpectator;
+  addTeamBtn.disabled = locked || isSpectator;
+  generateBracketBtn.disabled = isSpectator;
+  resetTournamentBtn.disabled = isSpectator;
   modalitySelect.disabled = false; // troca de modalidade sempre permitida
 }
 

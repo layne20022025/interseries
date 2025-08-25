@@ -25,6 +25,29 @@ body {
   color: var(--fg);
 }
 
+/* Login */
+.login-body { min-height: 100vh; display: grid; }
+.login-layout { display: grid; grid-template-columns: 1fr; min-height: 100vh; }
+.login-illustration {
+  background-image: url('https://images.unsplash.com/photo-1521417531071-6f2d2b5168f0?q=80&w=1200&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+.login-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(15,23,42,0.7), rgba(15,23,42,0.85)); display: grid; place-content: center; text-align: center; padding: 24px; }
+.login-overlay h1 { margin: 0 0 8px 0; font-size: 32px; }
+.login-overlay p { margin: 0; color: var(--muted); }
+.login-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; margin: 24px; padding: 20px; display: grid; gap: 12px; align-content: start; }
+.login-form { display: grid; gap: 12px; }
+.radio-row { display: flex; gap: 12px; }
+.radio { display: inline-flex; gap: 8px; align-items: center; }
+.login-card .form-actions { margin-top: 4px; }
+
+@media (min-width: 960px) {
+  .login-layout { grid-template-columns: 1.3fr 1fr; }
+  .login-card { margin: 36px; padding: 24px; }
+}
+
 .app-header {
   padding: 24px 16px;
   text-align: center;

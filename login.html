@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Login do Interclasse Escolar: escolha seu perfil para acessar os jogos.">
+  <meta name="theme-color" content="#0f172a">
+  <title>Interclasse - Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body class="login-body">
+  <main class="login-layout">
+    <section class="login-illustration" aria-hidden="true">
+      <div class="login-overlay">
+        <h1>Interclasse Escolar</h1>
+        <p>Acompanhe e jogue o torneio da sua escola.</p>
+      </div>
+    </section>
+
+    <section class="login-card" aria-labelledby="login-title">
+      <h2 id="login-title">Entrar</h2>
+      <p class="small">Escolha seu perfil e preencha os dados para continuar.</p>
+
+      <form id="login-form" class="login-form" autocomplete="off">
+        <div class="form-row">
+          <label>Perfil</label>
+          <div class="radio-row" role="radiogroup" aria-label="Perfil de acesso">
+            <label class="radio"><input type="radio" name="role" value="jogador" checked> Jogador</label>
+            <label class="radio"><input type="radio" name="role" value="espectador"> Espectador</label>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <label for="name">Nome completo</label>
+          <input id="name" name="name" type="text" placeholder="Seu nome" required>
+        </div>
+
+        <div id="player-fields">
+          <div class="form-row">
+            <label for="age">Idade</label>
+            <input id="age" name="age" type="number" min="5" max="100" placeholder="Ex.: 16">
+          </div>
+          <div class="form-row">
+            <label for="classroom">Turma</label>
+            <input id="classroom" name="classroom" type="text" maxlength="20" placeholder="Ex.: 1ºA, 2ºB">
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Entrar</button>
+        </div>
+        <p class="hint">Você pode mudar de perfil depois saindo da conta.</p>
+      </form>
+    </section>
+  </main>
+
+  <script src="auth.js"></script>
+  <script>
+    // Controla exibição de campos de jogador
+    const roleRadios = document.querySelectorAll('input[name="role"]');
+    const playerFields = document.getElementById('player-fields');
+    function updateFields() {
+      const role = document.querySelector('input[name="role"]:checked').value;
+      playerFields.style.display = role === 'jogador' ? 'grid' : 'none';
+    }
+    roleRadios.forEach(r => r.addEventListener('change', updateFields));
+    updateFields();
+
+    // Handler de login
+    const form = document.getElementById('login-form');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const role = formData.get('role');
+      const name = String(formData.get('name') || '').trim();
+      const age = formData.get('age');
+      const classroom = String(formData.get('classroom') || '').trim();
+      if (!name) {
+        console.error('[ERRO] Nome é obrigatório');
+        alert('Informe seu nome.');
+        return;
+      }
+      if (role === 'jogador' && !classroom) {
+        console.error('[ERRO] Turma é obrigatória para jogadores');
+        alert('Informe sua turma para continuar como jogador.');
+        return;
+      }
+      const user = {
+        role,
+        name,
+        age: age ? Number(age) : null,
+        classroom: classroom || null
+      };
+      try {
+        window.Auth.setUser(user);
+        console.log('[INFO] Login realizado com sucesso', user);
+        window.location.href = 'index.html';
+      } catch (err) {
+        console.error('[ERRO] Falha ao salvar sessão', err);
+        alert('Não foi possível entrar. Veja o console.');
+      }
+    });
+  </script>
+</body>
+</html>
+
+

@@ -14,6 +14,7 @@
   <header class="app-header">
     <h1>Interclasse Escolar</h1>
     <p>Cadastro de equipes e chaveamento eliminatório (Futsal e Vôlei)</p>
+    <div id="user-bar" class="small"></div>
   </header>
 
   <main class="container">
@@ -77,6 +78,21 @@
     <small>Funciona 100% offline em qualquer navegador moderno. Sem frameworks.</small>
   </footer>
 
+  <script src="auth.js"></script>
+  <script>
+    // Exigir sessão; espectadores não podem editar dados
+    const user = window.Auth.requireAuth('login.html');
+    window.__CURRENT_USER__ = user;
+    document.addEventListener('DOMContentLoaded', () => {
+      const bar = document.getElementById('user-bar');
+      if (!bar || !user) return;
+      const name = user.name || 'Usuário';
+      const role = user.role === 'jogador' ? 'Jogador' : 'Espectador';
+      bar.innerHTML = `${name} — ${role} · <button id="logout-btn" class="btn" style="padding:4px 8px">Sair</button>`;
+      const btn = document.getElementById('logout-btn');
+      btn?.addEventListener('click', () => { window.Auth.clearUser(); window.location.href = 'login.html'; });
+    });
+  </script>
   <script src="script.js"></script>
 </body>
 </html>
